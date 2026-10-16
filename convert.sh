@@ -2,8 +2,8 @@
 
 set -e
 
-rm data/*.orc
-rm data/*.parquet
+rm -f data/*.orc
+rm -f data/*.parquet
 
 ############################# LHCB #############################
 
