@@ -1,4 +1,5 @@
 import ROOT
+import uproot
 import awkward as ak
 from pyarrow import orc
 import pyarrow.parquet as pq
@@ -6,9 +7,9 @@ import argparse
 
 
 def read_as_ak(dataset_name, dataset_path):
-    rdf = ROOT.RDataFrame(dataset_name, dataset_path)
-    colnames = [str(colname) for colname in rdf.GetColumnNames()]
-    ak_array = ak.from_rdataframe(rdf, colnames)
+    with uproot.open(dataset_path) as file:
+        ds = file[dataset_name]
+        ak_array = ds.arrays(library="ak")
     return ak_array
 
 
