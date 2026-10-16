@@ -248,7 +248,7 @@ static AnalysisTime_t analysis_rntuple(std::string_view ntuple_path,
   auto hMass =
       std::make_unique<TH1D>("Dimuon_mass", "Dimuon_mass", 2000, 0.25, 300);
 
-  auto viewNMuon = ntuple->GetView<std::int32_t>("nMuon");
+  auto viewNMuon = ntuple->GetView<ROOT::RNTupleCardinality<std::uint32_t>>("nMuon");
   auto viewMuonCharge =
       ntuple->GetView<ROOT::RVec<std::int32_t>>("Muon_charge");
   auto viewMuonPt = ntuple->GetView<ROOT::RVec<float>>("Muon_pt");
