@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}${ROOT_CXX_FLAGS}${C
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 add_library(util SHARED util.cxx util.hxx)
-target_link_libraries(util PRIVATE ROOT::Hist)
+target_link_libraries(util PRIVATE ROOT::ROOTVecOps ROOT::Hist ROOT::Gui)
 
 add_executable(lhcb lhcb.cxx)
 target_link_libraries(lhcb PRIVATE util ROOT::RIO ROOT::ROOTDataFrame Arrow::arrow_shared Parquet::parquet_shared)
