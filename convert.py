@@ -1,10 +1,18 @@
 import ROOT
 import uproot
 import awkward as ak
+import pyarrow as pa
+import pyarrow.compute as pc
 from pyarrow import orc
 import pyarrow.parquet as pq
 import argparse
 
+UNSIGNED_TO_SIGNED = {
+    pa.uint8(): pa.int16(), # We have 8 bit integer > 127 in the dataset
+    pa.uint16(): pa.int16(),
+    pa.uint32(): pa.int32(),
+    pa.uint64(): pa.int64(),
+}
 
 def read_as_ak(dataset_name, dataset_path):
     with uproot.open(dataset_path) as file:
@@ -12,10 +20,33 @@ def read_as_ak(dataset_name, dataset_path):
         ak_array = ds.arrays(library="ak")
     return ak_array
 
+def cast_unsigned_columns(table):
+    """Recursively replace unsigned integer types (incl. inside lists/structs)."""
+    def cast_type(t):
+        if t in UNSIGNED_TO_SIGNED:
+            return UNSIGNED_TO_SIGNED[t]
+        if pa.types.is_list(t):
+            return pa.list_(cast_type(t.value_type))
+        if pa.types.is_large_list(t):
+            return pa.large_list(cast_type(t.value_type))
+        if pa.types.is_struct(t):
+            return pa.struct([(f.name, cast_type(f.type)) for f in t])
+        return t
+
+    new_fields = []
+    for field in table.schema:
+        new_type = cast_type(field.type)
+        if new_type == field.type:
+            new_fields.append(field)
+        else:
+            new_fields.append(pa.field(field.name, new_type))
+    new_schema = pa.schema(new_fields)
+    return table.cast(new_schema) # pyarrow casts column-wise, including nested types
 
 def convert2orc(ak_array, output_name, events_per_cluster, uncompressed=False, mirror_rntuple_settings=False):
     compression = "UNCOMPRESSED" if uncompressed else "ZSTD"
     arrow_table = ak.to_arrow_table(ak_array, extensionarray=False)
+    arrow_table = cast_unsigned_columns(arrow_table)
     orc.write_table(
         arrow_table,
         output_name,
