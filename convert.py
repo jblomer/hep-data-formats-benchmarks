@@ -1,4 +1,3 @@
-from pyarrow.tests.test_flight import MultiHeaderServerMiddlewareFactory
 import ROOT
 import awkward as ak
 from pyarrow import orc
