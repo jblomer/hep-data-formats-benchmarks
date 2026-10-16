@@ -158,8 +158,7 @@ static AnalysisTime_t analysis_parquet(const std::string &path,
       std::chrono::steady_clock::now();
 
   for (std::int32_t row_group = 0; row_group < n_row_groups; ++row_group) {
-    auto st = reader->ReadRowGroup(row_group, columns, &table);
-    assert(st.ok());
+    PARQUET_ASSIGN_OR_THROW(auto table, reader->ReadRowGroup(row_group, columns));
 
     assert(table->GetColumnByName("nMuon")->num_chunks() == 1);
     assert(table->GetColumnByName("Muon_charge")->num_chunks() == 1);

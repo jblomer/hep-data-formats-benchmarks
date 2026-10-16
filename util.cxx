@@ -73,12 +73,12 @@ std::shared_ptr<arrow::Table> open_arrow(const std::string &input_path, FileForm
     return table;
   } else if (fmt == FileFormat::parquet) {
     // Open Parquet file reader
-    std::unique_ptr<parquet::arrow::FileReader> reader;
-    PARQUET_THROW_NOT_OK(parquet::arrow::OpenFile(input, pool, &reader));
+    auto reader_result = parquet::arrow::OpenFile(input, pool);
+    PARQUET_THROW_NOT_OK(reader_result);
+    auto reader = std::move(reader_result).ValueOrDie();
 
     // Read entire file as a single Arrow table
-    std::shared_ptr<arrow::Table> table;
-    PARQUET_THROW_NOT_OK(reader->ReadTable(&table));
+    PARQUET_ASSIGN_OR_THROW(auto table, reader->ReadTable());
     return table;
   }
 
